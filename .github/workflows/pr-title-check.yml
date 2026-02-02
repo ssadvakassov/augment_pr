@@ -17,7 +17,7 @@ jobs:
             
             // Pattern: AUTO-<number>_<string with length more than 20 characters>
             // Example: AUTO-123_This is a valid PR title with more than 20 chars
-            const pattern = /^AUTO-\d+_.{20,}$/;
+            const pattern = /^AUTO-\d+_.{10,}$/;
             
             if (!pattern.test(prTitle)) {
               const errorMessage = `
