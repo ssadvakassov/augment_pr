@@ -1,0 +1,43 @@
+name: PR Title Check
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  check-pr-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR Title Format
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prTitle = context.payload.pull_request.title;
+            console.log(`PR Title: ${prTitle}`);
+            
+            // Pattern: AUTO-<number>_<string with length more than 20 characters>
+            // Example: AUTO-123_This is a valid PR title with more than 20 chars
+            const pattern = /^AUTO-\d+_.{20,}$/;
+            
+            if (!pattern.test(prTitle)) {
+              const errorMessage = `
+              ❌ PR title does not match the required format!
+              
+              **Required format:** \`AUTO-<number>_<description>\`
+              
+              **Requirements:**
+              - Must start with \`AUTO-\`
+              - Followed by a number
+              - Then an underscore \`_\`
+              - Then a description with at least 20 characters
+              
+              **Example:** \`AUTO-123_This is a valid PR title with sufficient length\`
+              
+              **Your PR title:** \`${prTitle}\`
+              `;
+              
+              core.setFailed(errorMessage);
+            } else {
+              console.log('✅ PR title format is valid!');
+            }
+
