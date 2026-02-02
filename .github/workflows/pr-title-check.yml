@@ -11,7 +11,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Check PR Title Format
+      - name: Check PR Title and Branch Name Format
         run: |
-          bash .github/scripts/check-pr-title.sh "${{ github.event.pull_request.title }}"
+          bash .github/scripts/check-pr-title.sh "${{ github.event.pull_request.title }}" "${{ github.event.pull_request.head.ref }}"
 
