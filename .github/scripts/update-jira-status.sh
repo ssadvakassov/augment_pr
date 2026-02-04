@@ -45,47 +45,47 @@ if [ -z "$JIRA_API_TOKEN" ]; then
 fi
 
 # Get available transitions for the issue
-echo ""
-echo "Fetching available transitions for $JIRA_TICKET..."
+# echo ""
+# echo "Fetching available transitions for $JIRA_TICKET..."
 
-TRANSITIONS_RESPONSE=$(curl -s -w "\n%{http_code}" \
-    -u "${JIRA_EMAIL}:${JIRA_API_TOKEN}" \
-    -H "Content-Type: application/json" \
-    "${JIRA_BASE_URL}/rest/api/3/issue/${JIRA_TICKET}/transitions")
+# TRANSITIONS_RESPONSE=$(curl -s -w "\n%{http_code}" \
+#     -u "${JIRA_EMAIL}:${JIRA_API_TOKEN}" \
+#     -H "Content-Type: application/json" \
+#     "${JIRA_BASE_URL}/rest/api/3/issue/${JIRA_TICKET}/transitions")
 
-HTTP_CODE=$(echo "$TRANSITIONS_RESPONSE" | tail -n1)
-TRANSITIONS_BODY=$(echo "$TRANSITIONS_RESPONSE" | sed '$d')
+# HTTP_CODE=$(echo "$TRANSITIONS_RESPONSE" | tail -n1)
+# TRANSITIONS_BODY=$(echo "$TRANSITIONS_RESPONSE" | sed '$d')
 
-if [ "$HTTP_CODE" != "200" ]; then
-    echo "❌ Failed to fetch transitions. HTTP Status: $HTTP_CODE"
-    echo "Response: $TRANSITIONS_BODY"
-    exit 1
-fi
+# if [ "$HTTP_CODE" != "200" ]; then
+#     echo "❌ Failed to fetch transitions. HTTP Status: $HTTP_CODE"
+#     echo "Response: $TRANSITIONS_BODY"
+#     exit 1
+# fi
 
 # Find the "Code Review" transition ID
 # Common names: "Code Review", "In Code Review", "Ready for Code Review"
-TRANSITION_ID=$(echo "$TRANSITIONS_BODY" | jq -r '.transitions[] | select(.name | test("Code Review"; "i")) | .id' | head -n1)
+# TRANSITION_ID=$(echo "$TRANSITIONS_BODY" | jq -r '.transitions[] | select(.name | test("Code Review"; "i")) | .id' | head -n1)
 
-if [ -z "$TRANSITION_ID" ] || [ "$TRANSITION_ID" == "null" ]; then
-    echo "⚠️  Warning: 'Code Review' transition not found for $JIRA_TICKET"
-    echo "Available transitions:"
-    echo "$TRANSITIONS_BODY" | jq -r '.transitions[] | "  - \(.name) (id: \(.id))"'
-    echo ""
-    echo "The issue may already be in Code Review or the transition is not available."
-    exit 0
-fi
+# if [ -z "$TRANSITION_ID" ] || [ "$TRANSITION_ID" == "null" ]; then
+#     echo "⚠️  Warning: 'Code Review' transition not found for $JIRA_TICKET"
+#     echo "Available transitions:"
+#     echo "$TRANSITIONS_BODY" | jq -r '.transitions[] | "  - \(.name) (id: \(.id))"'
+#     echo ""
+#     echo "The issue may already be in Code Review or the transition is not available."
+#     exit 0
+# fi
 
-echo "Found 'Code Review' transition with ID: $TRANSITION_ID"
+# echo "Found 'Code Review' transition with ID: $TRANSITION_ID"
 
 # Perform the transition
 echo ""
-echo "Updating $JIRA_TICKET status to 'Code Review'..."
+echo "Updating $JIRA_TICKET status to 'Review'..."
 
 UPDATE_RESPONSE=$(curl -s -w "\n%{http_code}" \
     -X POST \
     -u "${JIRA_EMAIL}:${JIRA_API_TOKEN}" \
     -H "Content-Type: application/json" \
-    -d "{\"transition\": {\"id\": \"${TRANSITION_ID}\"}}" \
+    -d "{\"transition\": {\"id\": \"51\"}}" \
     "${JIRA_BASE_URL}/rest/api/3/issue/${JIRA_TICKET}/transitions")
 
 HTTP_CODE=$(echo "$UPDATE_RESPONSE" | tail -n1)
