@@ -71,7 +71,38 @@ jobs:
     if: ${{ failure() }}
     runs-on: ubuntu-latest
     steps:
-      - name: Notify (Slack/Teams/Email/etc)
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract Jira ticket from PR title
+        id: extract-jira
         run: |
-          echo "Workflow failed: ${{ github.workflow }}"
-          echo "Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          # Remove [HOTFIX] prefix if present
+          PR_TITLE=$(echo "$PR_TITLE" | sed 's/^\[HOTFIX\] //')
+
+          if [[ $PR_TITLE =~ ^(NUCLEUS|AUTO)-([0-9]+)_ ]]; then
+            JIRA_TICKET="${BASH_REMATCH[1]}-${BASH_REMATCH[2]}"
+            echo "has_jira=true" >> $GITHUB_OUTPUT
+            echo "ticket=$JIRA_TICKET" >> $GITHUB_OUTPUT
+            echo "✅ Jira ticket found: $JIRA_TICKET"
+          else
+            echo "has_jira=false" >> $GITHUB_OUTPUT
+            echo "ℹ️  No Jira ticket in PR title, skipping"
+          fi
+
+      - name: Move ticket to Changes Requested
+        if: steps.extract-jira.outputs.has_jira == 'true'
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+        run: |
+          FAILED_RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          bash .github/scripts/move-to-changes-requested.sh \
+            "${{ steps.extract-jira.outputs.ticket }}" \
+            "$JIRA_BASE_URL" \
+            "$JIRA_EMAIL" \
+            "$JIRA_API_TOKEN" \
+            "$FAILED_RUN_URL"
