@@ -65,3 +65,13 @@ jobs:
             "$JIRA_BASE_URL" \
             "$JIRA_EMAIL" \
             "$JIRA_API_TOKEN"
+
+  notify-on-failure:
+    needs: [check-pr-title, update-jira-status]
+    if: ${{ failure() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify (Slack/Teams/Email/etc)
+        run: |
+          echo "Workflow failed: ${{ github.workflow }}"
+          echo "Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
