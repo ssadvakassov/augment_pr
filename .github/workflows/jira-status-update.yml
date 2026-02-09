@@ -29,7 +29,13 @@ jobs:
           echo "branch=$TARGET_BRANCH" >> $GITHUB_OUTPUT
           echo "🎯 Target branch: $TARGET_BRANCH"
 
+      - name: Skip if not targeting main
+        if: steps.get-target-branch.outputs.branch != 'main'
+        run: |
+          echo "ℹ️  Target branch is not 'main', skipping Jira status update"
+
       - name: Extract Jira ticket from PR title
+        if: steps.get-target-branch.outputs.branch == 'main'
         id: extract-jira
         run: |
           PR_TITLE="${{ github.event.pull_request.title }}"
@@ -47,7 +53,7 @@ jobs:
           fi
 
       - name: Verify Jira ticket exists and check status
-        if: steps.extract-jira.outputs.has_jira == 'true'
+        if: steps.get-target-branch.outputs.branch == 'main' && steps.extract-jira.outputs.has_jira == 'true'
         id: verify-jira
         env:
           JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
@@ -61,7 +67,7 @@ jobs:
             "$JIRA_API_TOKEN"
 
       - name: Update Jira Status to Code Review
-        if: steps.extract-jira.outputs.has_jira == 'true' && steps.verify-jira.outputs.should_update == 'true'
+        if: steps.get-target-branch.outputs.branch == 'main' && steps.extract-jira.outputs.has_jira == 'true' && steps.verify-jira.outputs.should_update == 'true'
         env:
           JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
           JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
